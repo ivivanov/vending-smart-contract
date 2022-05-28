@@ -9,24 +9,24 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: '0.8.4',
+        version: '0.8.7',
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200
-          }
-        }
-      }]
+            runs: 200,
+          },
+        },
+      },
+    ],
   },
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: false,
     runOnCompile: false,
-    strict: true
+    strict: true,
   },
   gasReporter: {
-    enabled: true,
-    currency: 'USD'
+    currency: 'USD',
   },
   preprocess: {
     eachLine: removeConsoleLog((hre) => hre.network.name !== 'hardhat'),

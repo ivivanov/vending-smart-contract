@@ -5,10 +5,10 @@
   "scripts": {
     "clean": "hardhat clean",
     "compile": "hardhat compile",
-    "test": "hardhat test",
-    "deploy": "yarn clean && hardhat deploy",
     "coverage": "yarn clean && hardhat coverage",
-    "lint:fix": "sort-package-json && prettier --write './**' && solhint --fix 'contracts/**/*.sol' 'interfaces/**/*.sol'"
+    "deploy": "yarn clean && hardhat deploy",
+    "lint:fix": "sort-package-json && prettier --write './**' && solhint --fix 'contracts/**/*.sol' 'interfaces/**/*.sol'",
+    "test": "hardhat test"
   },
   "dependencies": {},
   "devDependencies": {
