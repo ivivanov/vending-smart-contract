@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "license": "UNLICENSED",
   "scripts": {
+    "clean": "hardhat clean",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "yarn clean && hardhat deploy",
+    "coverage": "yarn clean && hardhat coverage",
     "lint:fix": "sort-package-json && prettier --write './**' && solhint --fix 'contracts/**/*.sol' 'interfaces/**/*.sol'"
   },
   "dependencies": {},
@@ -13,7 +18,10 @@
     "ethereum-waffle": "^3.0.0",
     "ethers": "^5.0.0",
     "hardhat": "^2.9.6",
+    "hardhat-contract-sizer": "^2.5.1",
     "hardhat-deploy": "^0.11.10",
+    "hardhat-gas-reporter": "^1.0.8",
+    "hardhat-preprocessor": "^0.1.4",
     "prettier": "^2.6.2",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.7",
