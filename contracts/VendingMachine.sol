@@ -113,7 +113,7 @@ contract VendingMachine is ERC20, Operated, PullPayment, ReentrancyGuard, IVendi
   /**
    * @dev See {IVendingMachine-restock}.
    *
-   * Access is restricted to operators only.
+   * Access is restricted to operators only. Throws if the new capacity is greater then the allowed max capacity.
    */
   function restock(uint8 amount) external override onlyOperator nonReentrant {
     require(MAX_CAPACITY >= _currentStock() + amount, 'VMAdmin: restock amount above max');
@@ -126,7 +126,7 @@ contract VendingMachine is ERC20, Operated, PullPayment, ReentrancyGuard, IVendi
   /**
    * @dev See {IVendingMachine-setPrice}.
    *
-   * Access is restricted to operators only.
+   * Access is restricted to operators only. Throws if the current stock is not 0.
    */
   function setPrice(uint256 newPrice) external override onlyOperator nonReentrant {
     require(_currentStock() == 0, 'VMAdmin: setting price when stock is not 0');

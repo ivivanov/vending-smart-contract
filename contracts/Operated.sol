@@ -37,7 +37,7 @@ abstract contract Operated {
    * @dev Restricts a function so it can only be executed when caller's address has operator role. Throws if called by any account other than operator.
    */
   modifier onlyOperator() {
-    require(_addressToOperator[msg.sender], 'Operator: caller is not operator');
+    require(_addressToOperator[msg.sender], 'Operated: caller is not operator');
     _;
   }
 
@@ -45,7 +45,7 @@ abstract contract Operated {
    * @dev Throws if new address is same as the caller.
    */
   modifier notSelf(address newAddress) {
-    require(msg.sender != newAddress, 'Operator: new address can not be sender');
+    require(msg.sender != newAddress, 'Operated: new address can not be sender');
     _;
   }
 
@@ -53,7 +53,7 @@ abstract contract Operated {
    * @dev Add Operator adds new account to the list of operators.
    * Can only be called by operator.
    */
-  function addOperator(address newOperator) public virtual onlyOperator {
+  function addOperator(address newOperator) external virtual onlyOperator notSelf(newOperator) {
     _addOperator(newOperator);
   }
 
@@ -61,9 +61,9 @@ abstract contract Operated {
    * @dev Add Operator adds new account to the list of operators.
    * Internal function without access restriction.
    */
-  function _addOperator(address newOperator) internal virtual notSelf(newOperator) {
-    require(_operatorsCount.current() < _MAX_OPERATORS, 'Operator: max operators reached');
-    require(_addressToOperator[newOperator] == false, 'Operator: address already operator');
+  function _addOperator(address newOperator) internal virtual {
+    require(_operatorsCount.current() < _MAX_OPERATORS, 'Operated: max operators reached');
+    require(_addressToOperator[newOperator] == false, 'Operated: address already operator');
 
     _operatorsCount.increment();
     _addressToOperator[newOperator] = true;
@@ -75,7 +75,7 @@ abstract contract Operated {
    * @dev Remove Operator removes existing operator account from the list of operators.
    * Can only be called by operator.
    */
-  function removeOperator(address oldOperator) public virtual onlyOperator {
+  function removeOperator(address oldOperator) external virtual onlyOperator notSelf(oldOperator) {
     _removeOperator(oldOperator);
   }
 
@@ -83,8 +83,8 @@ abstract contract Operated {
    * @dev Remove Operator removes existing operator account from the list of operators.
    * Internal function without access restriction.
    */
-  function _removeOperator(address oldOperator) internal virtual notSelf(oldOperator) {
-    require(_addressToOperator[oldOperator] == true, 'Operator: address not operator');
+  function _removeOperator(address oldOperator) internal virtual {
+    require(_addressToOperator[oldOperator] == true, 'Operated: address not operator');
 
     _operatorsCount.decrement();
     _addressToOperator[oldOperator] = false;
