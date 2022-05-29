@@ -7,6 +7,7 @@
     "compile": "hardhat compile",
     "coverage": "yarn clean && hardhat coverage",
     "deploy": "yarn clean && hardhat deploy",
+    "lint:check": "solhint 'contracts/**/*.sol' 'interfaces/**/*.sol' && prettier --check './**'",
     "lint:fix": "sort-package-json && prettier --write './**' && solhint --fix 'contracts/**/*.sol' 'interfaces/**/*.sol'",
     "test": "hardhat test"
   },
