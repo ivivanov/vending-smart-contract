@@ -38,6 +38,13 @@ interface IColaMachine {
   function buyBottle() external payable;
 
   /**
+   * @dev Buys 1 bottle for a specific price in DAI. The equivalent amount of tokens are transferred to the sender.
+   *
+   * Emits a {BottleBought} event.
+   */
+  function buyBottleDAI(uint256 amount) external;
+
+  /**
    * @dev Buys 5 bottle for a specific price in ETH. The equivalent amount of tokens are transferred to the sender.
    *
    * Emits a {BottleBought} event.
@@ -78,4 +85,11 @@ interface IColaMachine {
    * NOTE: Consider restricting the access.
    */
   function prepareWithdrawal() external;
+
+  /**
+   * @dev Withdraw all the contract DAI ballance to the sender's address.
+   *
+   * NOTE: Consider restricting the access.
+   */
+  function withdrawDAI() external;
 }

@@ -18,6 +18,7 @@ describe('ColaMachine contract', function () {
   // contracts
   let colaMachine
   let spaceCola
+  let daiToken
 
   before(async () => {
     // forking ropsten
@@ -29,14 +30,16 @@ describe('ColaMachine contract', function () {
     // getting signers with ETH
     ;[deployer, randomUser] = await ethers.getSigners()
 
-    // precalculating SpaceCola's contract address as both ColaMachine contract and SpaceCola contract depend on
-    // one another
+    // deploy contracts
+    const daiTokenFactory = await ethers.getContractFactory('DAIToken', deployer)
+    daiToken = await daiTokenFactory.deploy()
+
+    // precalculating SpaceCola's contract address as both ColaMachine contract and SpaceCola contract depend on one another
     const currentNonce = await ethers.provider.getTransactionCount(deployer.address)
     const spaceColaPrecalculatedAddress = utils.getContractAddress({ from: deployer.address, nonce: currentNonce + 1 })
 
-    // deploy contracts
     const colaMachineFactory = await ethers.getContractFactory('ColaMachine', deployer)
-    colaMachine = await colaMachineFactory.deploy(spaceColaPrecalculatedAddress, INITIAL_PRICE)
+    colaMachine = await colaMachineFactory.deploy(spaceColaPrecalculatedAddress, daiToken.address, INITIAL_PRICE)
 
     const spaceColaFactory = await ethers.getContractFactory('SpaceCola', deployer)
     spaceCola = await spaceColaFactory.deploy(colaMachine.address)
@@ -108,7 +111,7 @@ describe('ColaMachine contract', function () {
 
   // ... etc
 
-  // * prepareWithdrawal test
+  // * prepareWithdrawal tests
   // Emit event tests
   it('should emit ReadyToWithdraw when preparing withdrawal', async () => {
     await expect(colaMachine.prepareWithdrawal()).to.emit(colaMachine, 'ReadyToWithdraw').withArgs(deployer.address, 0)
@@ -130,6 +133,41 @@ describe('ColaMachine contract', function () {
   })
 
   // Ensure fail cases
+  // ...
+
+  // * buyBottleDAI tests - just for POC
+  it('should get SPC token when buying bottle with DAI', async () => {
+    const daiAmount = utils.parseUnits('100', 'ether')
+    await daiToken.mint(randomUser.address, daiAmount)
+    assert(daiToken.balanceOf(randomUser.address), daiAmount)
+    assert(daiToken.balanceOf(colaMachine.address), 0)
+
+    const priceDAI = await colaMachine.priceDAI()
+    await daiToken.connect(randomUser).increaseAllowance(colaMachine.address, priceDAI)
+    await colaMachine.connect(randomUser).buyBottleDAI(priceDAI)
+
+    expect(await spaceCola.balanceOf(randomUser.address)).to.be.eq(1)
+    expect(await daiToken.balanceOf(randomUser.address)).to.be.eq(daiAmount.add(priceDAI.mul(-1)))
+    expect(await daiToken.balanceOf(colaMachine.address)).to.be.eq(priceDAI)
+  })
+
+  // ...
+
+  // * withdrawDAI tests - just for POC
+  it('should withdraw all DAI tokens from the contract', async () => {
+    const daiAmount = utils.parseUnits('100', 'ether')
+    await daiToken.mint(randomUser.address, daiAmount)
+    assert(daiToken.balanceOf(randomUser.address), daiAmount)
+    assert(daiToken.balanceOf(colaMachine.address), 0)
+
+    const priceDAI = await colaMachine.priceDAI()
+    await daiToken.connect(randomUser).increaseAllowance(colaMachine.address, priceDAI)
+    await colaMachine.connect(randomUser).buyBottleDAI(priceDAI)
+
+    await colaMachine.connect(deployer).withdrawDAI()
+    expect(await daiToken.balanceOf(deployer.address)).to.be.eq(priceDAI)
+  })
+
   // ...
 })
 
