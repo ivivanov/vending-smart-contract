@@ -11,12 +11,11 @@ module.exports = async (hre) => {
     skipIfAlreadyDeployed: true,
   })
 
-
   if (hre.network.name !== 'hardhat' && (await shouldVerifyContract(contract))) {
     await hre.run('verify:verify', {
       address: contract.address,
       constructorArguments: [colaMachine.address],
-    });
+    })
   }
 }
 

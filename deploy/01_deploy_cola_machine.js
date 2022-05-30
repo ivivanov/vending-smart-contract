@@ -19,7 +19,7 @@ module.exports = async (hre) => {
     await hre.run('verify:verify', {
       address: contract.address,
       constructorArguments: [spaceColaPrecalculatedAddress, INITIAL_PRICE],
-    });
+    })
   }
 }
 
