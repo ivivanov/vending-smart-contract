@@ -14,8 +14,8 @@ contract SpaceCola is ERC20, ERC20Burnable, Ownable {
    * @dev Sets the values for {name} and {symbol}. See {ERC20-constructor}.
    * Transfers the ownership to {owner}.
    */
-  constructor(address owner) ERC20('Space Cola', 'SPC') {
-    transferOwnership(owner);
+  constructor(address newOwner) ERC20('Space Cola', 'SPC') {
+    transferOwnership(newOwner);
   }
 
   /**

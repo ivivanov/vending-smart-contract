@@ -42,6 +42,9 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
     address _daiToken,
     uint256 initialPrice
   ) {
+    require(_spaceCola != address(0), 'ColaM: spaceCola is the zero address');
+    require(_daiToken != address(0), 'ColaM: daiToken is the zero address');
+
     spaceCola = _spaceCola;
     daiToken = _daiToken;
     price = initialPrice;
@@ -68,7 +71,8 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
       addressToBottlesReturned[msg.sender]--;
     }
 
-    SpaceCola(spaceCola).transfer(msg.sender, ONE_BOTTLE);
+    bool success = SpaceCola(spaceCola).transfer(msg.sender, ONE_BOTTLE);
+    if (!success) revert FailedTransfer();
     _incrementSoldCounters(ONE_BOTTLE);
 
     emit BottleBought(msg.sender, ONE_BOTTLE);
@@ -87,8 +91,11 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
       addressToBottlesReturned[msg.sender]--;
     }
 
-    IERC20(daiToken).transferFrom(msg.sender, _myAddress(), actualPrice);
-    SpaceCola(spaceCola).transfer(msg.sender, ONE_BOTTLE);
+    bool success = false;
+    success = IERC20(daiToken).transferFrom(msg.sender, _myAddress(), actualPrice);
+    if (!success) revert FailedTransfer();
+    success = SpaceCola(spaceCola).transfer(msg.sender, ONE_BOTTLE);
+    if (!success) revert FailedTransfer();
     _incrementSoldCounters(ONE_BOTTLE);
 
     emit BottleBought(msg.sender, ONE_BOTTLE);
@@ -102,7 +109,8 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
   function buy5Bottles() external payable override nonReentrant minStock(5) {
     require(msg.value == _calc5BottlesPrice(), 'ColaM: eth does not match the price');
 
-    SpaceCola(spaceCola).transfer(msg.sender, FIVE_BOTTLES);
+    bool success = SpaceCola(spaceCola).transfer(msg.sender, FIVE_BOTTLES);
+    if (!success) revert FailedTransfer();
     _incrementSoldCounters(FIVE_BOTTLES);
 
     emit BottleBought(msg.sender, FIVE_BOTTLES);
@@ -135,7 +143,7 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
    * Access is restricted to operators only. Throws if the new capacity is greater then the allowed max capacity.
    */
   function restock(uint8 amount) external override onlyOperator nonReentrant {
-    require(MAX_CAPACITY >= _currentStock() + amount, 'ColaMAdmin:: restock amount above max');
+    require(MAX_CAPACITY >= _currentStock() + amount, 'ColaMAdmin: restock amount above max');
 
     SpaceCola(spaceCola).mint(_myAddress(), amount);
 
@@ -148,7 +156,7 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
    * Access is restricted to operators only. Throws if the current stock is not 0.
    */
   function setPrice(uint256 newPrice) external override onlyOperator nonReentrant {
-    require(_currentStock() == 0, 'ColaMAdmin:: setting price when stock is not 0');
+    require(_currentStock() == 0, 'ColaMAdmin: setting price when stock is not 0');
 
     price = newPrice;
 
@@ -171,20 +179,23 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
   /**
    * @dev Transfer all DAI from this contract to address of the caller.
    *
+   * Emits Transfer event. See {ERC20-_transfer}
+   *
    * Access is restricted to operators only.
    */
   function withdrawDAI() external override onlyOperator nonReentrant {
     IERC20 daiContract = IERC20(daiToken);
-    daiContract.transfer(msg.sender, daiContract.balanceOf(_myAddress()));
+    bool success = daiContract.transfer(msg.sender, daiContract.balanceOf(_myAddress()));
+    if (!success) revert FailedTransfer();
   }
 
   function _calc5BottlesPrice() private view returns (uint256) {
-    return price.mul(FIVE_BOTTLES).div(PERCENT_BASE).mul(BULK_ORDER_DISCOUNT);
+    return price.mul(FIVE_BOTTLES).mul(BULK_ORDER_DISCOUNT).div(PERCENT_BASE);
   }
 
   function _calc1BottlePrice(uint256 basePrice) private view returns (uint256 newPrice, bool isDiscounted) {
     isDiscounted = addressToBottlesReturned[msg.sender] > 0;
-    newPrice = isDiscounted ? basePrice.div(PERCENT_BASE).mul(RETURN_BOTTLE_DISCOUNT) : basePrice;
+    newPrice = isDiscounted ? basePrice.mul(RETURN_BOTTLE_DISCOUNT).div(PERCENT_BASE) : basePrice;
 
     return (newPrice, isDiscounted);
   }

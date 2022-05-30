@@ -1,6 +1,6 @@
 const { expect, assert } = require('chai')
 const { ethers } = require('hardhat')
-const { utils, constants } = require('ethers')
+const { utils } = require('ethers')
 const evm = require('./utils/evm.js')
 
 const FORK_BLOCK_NUMBER = 12314633
@@ -8,7 +8,7 @@ const FORK_BLOCK_NUMBER = 12314633
 describe('Operated abstract contract', function () {
   const INITIAL_PRICE = utils.parseUnits('0.1', 'ether')
   const MAX_OPERATORS = 3
-  const AddressZero = constants.AddressZero
+  const RnAddress = '0x0000000000000000000000000000000000000001'
 
   let snapshotId
 
@@ -31,7 +31,7 @@ describe('Operated abstract contract', function () {
 
     // deploy contracts
     const colaMachineFactory = await ethers.getContractFactory('ColaMachine', deployer)
-    colaMachine = await colaMachineFactory.deploy(AddressZero, AddressZero, INITIAL_PRICE)
+    colaMachine = await colaMachineFactory.deploy(RnAddress, RnAddress, INITIAL_PRICE)
 
     // snapshot
     snapshotId = await evm.snapshot.take()

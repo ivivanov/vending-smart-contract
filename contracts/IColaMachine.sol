@@ -31,6 +31,11 @@ interface IColaMachine {
   event ReadyToWithdraw(address dest, uint256 amount);
 
   /**
+   * Used when ERC20 transfer return success = false
+   */
+  error FailedTransfer();
+
+  /**
    * @dev Buys 1 bottle for a specific price in ETH. The equivalent amount of tokens are transferred to the sender.
    *
    * Emits a {BottleBought} event.
