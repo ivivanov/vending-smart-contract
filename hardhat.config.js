@@ -1,5 +1,6 @@
 require('dotenv/config')
 require('@nomiclabs/hardhat-waffle')
+require('@nomiclabs/hardhat-etherscan')
 require('hardhat-gas-reporter')
 require('solidity-coverage')
 require('hardhat-contract-sizer')
@@ -25,6 +26,9 @@ const networks = process.env.TEST
 module.exports = {
   defaultNetwork: 'hardhat',
   networks,
+  namedAccounts: {
+    deployer: 0,
+  },
   solidity: {
     compilers: [
       {
@@ -49,5 +53,8 @@ module.exports = {
   },
   preprocess: {
     eachLine: removeConsoleLog((hre) => hre.network.name !== 'hardhat'),
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 }
