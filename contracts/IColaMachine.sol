@@ -1,12 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-
 /**
- * @dev Interface of {VendingMachine}.
+ * @dev Interface of {ColaMachine}.
  */
-interface IVendingMachine is IERC20 {
+interface IColaMachine {
   /**
    * @dev Emitted when user buys a bottle.
    */
@@ -28,7 +26,7 @@ interface IVendingMachine is IERC20 {
   event PriceChanged(uint256 newPrice);
 
   /**
-   * @dev Emitted when operator initiates withdrawal of the {VendingMachine} balance.
+   * @dev Emitted when operator initiates withdrawal of the {ColaMachine} balance.
    */
   event ReadyToWithdraw(address dest, uint256 amount);
 

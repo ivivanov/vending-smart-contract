@@ -91,4 +91,8 @@ abstract contract Operated {
 
     emit OperatorRemoved(oldOperator);
   }
+
+  function getOperatorsCount() external view onlyOperator returns (uint256) {
+    return _operatorsCount.current();
+  }
 }
