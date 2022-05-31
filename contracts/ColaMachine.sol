@@ -8,11 +8,12 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import './IColaMachine.sol';
 import './Operated.sol';
 import './SpaceCola.sol';
+import './TotalCounters.sol';
 
 /**
  * @dev Cola Machine is a contract that implements the {IColaMachine} interface.
  */
-contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
+contract ColaMachine is Operated, TotalCounters, PullPayment, ReentrancyGuard, IColaMachine {
   using SafeMath for uint256;
 
   address public immutable spaceCola;
@@ -25,13 +26,10 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
   uint8 public constant ONE_BOTTLE = 1; // Token equivalent of 1 bottle
   uint8 public constant FIVE_BOTTLES = ONE_BOTTLE * 5; // Token equivalent of 5 bottles
 
-  mapping(address => uint256) public addressToBottlesBought;
   mapping(address => uint256) public addressToBottlesReturned;
 
   uint256 public price; // Bottle price in ETH
   uint256 public priceDAI = 18 ether; // Bottle price in DAI. Random number just for POC
-
-  uint256 private _totalSold;
 
   /**
    * @dev Sets the values for space cola address and initial price of the {SpaceCola} token.
@@ -73,7 +71,7 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
 
     bool success = SpaceCola(spaceCola).transfer(msg.sender, ONE_BOTTLE);
     if (!success) revert FailedTransfer();
-    _incrementSoldCounters(ONE_BOTTLE);
+    _incrementCounters(ONE_BOTTLE);
 
     emit BottleBought(msg.sender, ONE_BOTTLE);
   }
@@ -96,7 +94,7 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
     if (!success) revert FailedTransfer();
     success = SpaceCola(spaceCola).transfer(msg.sender, ONE_BOTTLE);
     if (!success) revert FailedTransfer();
-    _incrementSoldCounters(ONE_BOTTLE);
+    _incrementCounters(ONE_BOTTLE);
 
     emit BottleBought(msg.sender, ONE_BOTTLE);
   }
@@ -111,7 +109,7 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
 
     bool success = SpaceCola(spaceCola).transfer(msg.sender, FIVE_BOTTLES);
     if (!success) revert FailedTransfer();
-    _incrementSoldCounters(FIVE_BOTTLES);
+    _incrementCounters(FIVE_BOTTLES);
 
     emit BottleBought(msg.sender, FIVE_BOTTLES);
   }
@@ -134,7 +132,7 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
    * Returns all bottles sold. Access is restricted to operators only.
    */
   function getTotalSold() external view override onlyOperator returns (uint256) {
-    return _totalSold;
+    return _getTotal();
   }
 
   /**
@@ -202,11 +200,6 @@ contract ColaMachine is Operated, PullPayment, ReentrancyGuard, IColaMachine {
 
   function _currentStock() private view returns (uint256) {
     return SpaceCola(spaceCola).balanceOf(_myAddress());
-  }
-
-  function _incrementSoldCounters(uint256 amount) private {
-    _totalSold += amount;
-    addressToBottlesBought[msg.sender] += amount;
   }
 
   function _myAddress() private view returns (address) {
