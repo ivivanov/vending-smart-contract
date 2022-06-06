@@ -32,4 +32,5 @@ jobs:
         env:
           RPC_ROPSTEN: ${{ secrets.RPC_ROPSTEN }}
           PRIVATE_KEY_ROPSTEN: ${{ secrets.PRIVATE_KEY_ROPSTEN }}
+          DAI_TOKEN_ROPSTEN: ${{ secrets.DAI_TOKEN_ROPSTEN }}
         run: yarn test

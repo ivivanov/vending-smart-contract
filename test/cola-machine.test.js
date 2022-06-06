@@ -2,6 +2,7 @@ const { expect, assert } = require('chai')
 const { ethers } = require('hardhat')
 const { utils, BigNumber } = require('ethers')
 const evm = require('./utils/evm.js')
+const daiAbi = require('./abi/dai.json')
 
 const FORK_BLOCK_NUMBER = 12314633
 
@@ -30,16 +31,16 @@ describe('ColaMachine contract', function () {
     // getting signers with ETH
     ;[deployer, randomUser] = await ethers.getSigners()
 
-    // deploy contracts
-    const daiTokenFactory = await ethers.getContractFactory('DAIToken', deployer)
-    daiToken = await daiTokenFactory.deploy()
+    // DAI contract on Ropsten
+    daiToken = new ethers.Contract(process.env.DAI_TOKEN_ROPSTEN, daiAbi, deployer)
 
+    // deploy contracts
     // precalculating SpaceCola's contract address as both ColaMachine contract and SpaceCola contract depend on one another
     const currentNonce = await ethers.provider.getTransactionCount(deployer.address)
     const spaceColaPrecalculatedAddress = utils.getContractAddress({ from: deployer.address, nonce: currentNonce + 1 })
 
     const colaMachineFactory = await ethers.getContractFactory('ColaMachine', deployer)
-    colaMachine = await colaMachineFactory.deploy(spaceColaPrecalculatedAddress, daiToken.address, INITIAL_PRICE)
+    colaMachine = await colaMachineFactory.deploy(spaceColaPrecalculatedAddress, process.env.DAI_TOKEN_ROPSTEN, INITIAL_PRICE)
 
     const spaceColaFactory = await ethers.getContractFactory('SpaceCola', deployer)
     spaceCola = await spaceColaFactory.deploy(colaMachine.address)
@@ -137,17 +138,14 @@ describe('ColaMachine contract', function () {
 
   // * buyBottleDAI tests - just for POC
   it('should get SPC token when buying bottle with DAI', async () => {
-    const daiAmount = utils.parseUnits('100', 'ether')
-    await daiToken.mint(randomUser.address, daiAmount)
-    assert(daiToken.balanceOf(randomUser.address), daiAmount)
-    assert(daiToken.balanceOf(colaMachine.address), 0)
-
     const priceDAI = await colaMachine.priceDAI()
-    await daiToken.connect(randomUser).increaseAllowance(colaMachine.address, priceDAI)
-    await colaMachine.connect(randomUser).buyBottleDAI(priceDAI)
+    assert.isAbove(await daiToken.balanceOf(deployer.address), priceDAI)
+    assert(await daiToken.balanceOf(colaMachine.address), 0)
 
-    expect(await spaceCola.balanceOf(randomUser.address)).to.be.eq(1)
-    expect(await daiToken.balanceOf(randomUser.address)).to.be.eq(daiAmount.add(priceDAI.mul(-1)))
+    await daiToken.approve(colaMachine.address, priceDAI)
+    await colaMachine.buyBottleDAI(priceDAI)
+
+    expect(await spaceCola.balanceOf(deployer.address)).to.be.eq(1)
     expect(await daiToken.balanceOf(colaMachine.address)).to.be.eq(priceDAI)
   })
 
@@ -155,17 +153,17 @@ describe('ColaMachine contract', function () {
 
   // * withdrawDAI tests - just for POC
   it('should withdraw all DAI tokens from the contract', async () => {
-    const daiAmount = utils.parseUnits('100', 'ether')
-    await daiToken.mint(randomUser.address, daiAmount)
-    assert(daiToken.balanceOf(randomUser.address), daiAmount)
-    assert(daiToken.balanceOf(colaMachine.address), 0)
-
     const priceDAI = await colaMachine.priceDAI()
-    await daiToken.connect(randomUser).increaseAllowance(colaMachine.address, priceDAI)
-    await colaMachine.connect(randomUser).buyBottleDAI(priceDAI)
+    const initialBalance = await daiToken.balanceOf(deployer.address)
 
-    await colaMachine.connect(deployer).withdrawDAI()
-    expect(await daiToken.balanceOf(deployer.address)).to.be.eq(priceDAI)
+    await daiToken.approve(colaMachine.address, priceDAI)
+    await colaMachine.buyBottleDAI(priceDAI)
+
+    assert(await daiToken.balanceOf(colaMachine.address), priceDAI)
+    assert(await daiToken.balanceOf(deployer.address), initialBalance.add(priceDAI.mul(-1)))
+
+    await colaMachine.withdrawDAI()
+    expect(await daiToken.balanceOf(deployer.address)).to.be.eq(initialBalance)
   })
 
   // ...
